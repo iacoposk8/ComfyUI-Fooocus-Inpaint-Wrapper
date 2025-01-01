@@ -23,6 +23,10 @@ and comment on the last line:
 Then move a few lines up and remove:
 `while True:` and `time.sleep(0.01)`
 
+Edit `Fooocus/modules/meta_parser.py`
+and comment this line:
+`#import gradio as gr`
+
 Several things could change and these instructions could no longer be valid. However, what the code does is almost all in `Fooocus/launch.py` ​​where it creates the variable `args` and sends it to `Fooocus/modules/async_worker.py`. We can get the variable `args` by running Fooocus and modifying the file `Fooocus/webui.py` by modifying this function like this:
 
     def get_task(*args):
