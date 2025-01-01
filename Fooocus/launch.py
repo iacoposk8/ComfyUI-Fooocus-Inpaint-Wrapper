@@ -2,7 +2,6 @@ import os
 import sys
 import numpy as np
 import torch
-from modules import async_worker as worker
 from PIL import Image
 from io import BytesIO
 from torchvision import transforms
@@ -86,6 +85,8 @@ def fooocusinpaintlaunch(fooocus_dir, image_array, mask_array, performance, chec
 
 	args = [False, positive_prompt, negative_prompt, ['Fooocus V2', 'Fooocus Enhance', 'Fooocus Negative'], performance, '1152×896 <span style="color: grey;"> ∣ 9:7</span>', 1, 'png', seed, False, image_sharpness, guidance_scale, checkpoint, 'None', 0.5, True, lora1, lora1_weight, True, lora2, lora2_weight, True, lora3, lora3_weight, True, lora4, lora4_weight, True, lora5, lora5_weight, True, 'inpaint', 'Disabled', None, [], {'image': image_array, 'mask': mask_array}, inpaint_additional_prompt, None, False, False, False, False, 1.5, 0.8, 0.3, 7, 2, 'dpmpp_2m_sde_gpu', 'karras', 'Default (model)', -1, -1, -1, -1, -1, -1, False, False, False, False, 64, 128, 'joint', 0.25, False, 1.01, 1.02, 0.99, 0.95, False, method_setting[0], method_setting[1], method_setting[2], method_setting[3], False, False, 0, False, False, 'fooocus', None, 0.5, 0.6, 'ImagePrompt', None, 0.5, 0.6, 'ImagePrompt', None, 0.5, 0.6, 'ImagePrompt', None, 0.5, 0.6, 'ImagePrompt', False, 0, False, None, False, 'Disabled', 'Before First Enhancement', 'Original Prompts', False, '', '', '', 'sam', 'full', 'vit_b', 0.25, 0.3, 0, False, 'v2.6', 1, 0.618, 0, False, False, '', '', '', 'sam', 'full', 'vit_b', 0.25, 0.3, 0, False, 'v2.6', 1, 0.618, 0, False, False, '', '', '', 'sam', 'full', 'vit_b', 0.25, 0.3, 0, False, 'v2.6', 1, 0.618, 0, False]
 
+	#sys.path.append(fooocus_dir)
+	from modules import async_worker as worker
 	task = worker.AsyncTask(args=args)
 
 	worker.async_tasks.append(task)
