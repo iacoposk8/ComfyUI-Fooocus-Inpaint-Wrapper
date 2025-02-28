@@ -32,7 +32,8 @@ finally to have the percentage and the forecast find this code:
 
 and before this code add these lines:
 
-    cv2.imwrite(os.path.normpath('ComfyUI/custom_nodes/ComfyUI-Fooocus-Inpaint-Wrapper/image.png'), y)
+    y_corrected = cv2.cvtColor(y, cv2.COLOR_RGB2BGR)
+    cv2.imwrite(os.path.normpath('ComfyUI/custom_nodes/ComfyUI-Fooocus-Inpaint-Wrapper/image.png'), y_corrected)
     with open(os.path.normpath("ComfyUI/custom_nodes/ComfyUI-Fooocus-Inpaint-Wrapper/percentage.txt"), "w", encoding="utf-8") as file:
     	file.write(str(int(current_progress + async_task.callback_steps)))
 

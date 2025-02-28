@@ -11,31 +11,49 @@ from PIL import Image
 from tqdm import tqdm
 from huggingface_hub import snapshot_download
 import cv2
+import ctypes
 
 import comfy
 
 class ImageUpdater:
-	def __init__(self, image_file, refresh_rate=5):
-		self.image_file = image_file
-		self.refresh_rate = refresh_rate  # Tempo in secondi tra un aggiornamento e l'altro
-		self.running = True
-		self.start_loop()
+    def __init__(self, image_file, refresh_rate=5):
+        self.image_file = image_file
+        self.refresh_rate = refresh_rate  # Tempo in secondi tra aggiornamenti
+        self.running = False
+        self.thread = None
 
-	def start_loop(self):
-		while self.running:
-			if os.path.exists(self.image_file):
-				img = Image.open(self.image_file)
-				img = np.array(img)  # Converte l'immagine in array numpy per OpenCV
-				img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)  # Converti da RGB a BGR (Formato OpenCV)
+    def start(self):
+        """Avvia il thread dell'aggiornamento immagine."""
+        if self.running:
+            return  # Evita di avviare più thread
+        self.running = True
+        self.thread = threading.Thread(target=self.start_loop, daemon=True)
+        self.thread.start()
 
-				cv2.imshow("Preview Inpainting", img)
-				cv2.waitKey(1)  # Necessario per aggiornare la finestra senza bloccare
+    def start_loop(self):
+        """Loop di aggiornamento immagini eseguito nel thread."""
+        cv2.namedWindow("Preview Inpainting", cv2.WINDOW_NORMAL)  # Finestra ridimensionabile
+        cv2.resizeWindow("Preview Inpainting", 240, 256)  # Imposta dimensione finestra
 
-			time.sleep(self.refresh_rate)
+        while self.running:
+            if os.path.exists(self.image_file):
+                img = Image.open(self.image_file)
+                img = np.array(img)
+                img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
 
-	def stop(self):
-		self.running = False
-		cv2.destroyAllWindows()
+                cv2.imshow("Preview Inpainting", img)
+                key = cv2.waitKey(1)
+
+            time.sleep(self.refresh_rate)
+
+        cv2.destroyAllWindows()  # Chiude la finestra alla fine del thread
+
+    def stop(self):
+        """Ferma il thread e chiude la finestra."""
+        self.running = False
+        if self.thread:
+            self.thread.join()  # Aspetta la chiusura del thread
+        cv2.destroyAllWindows()
 
 class FooocusInpaintWrapper:
 	def __init__(self):
@@ -182,9 +200,6 @@ class FooocusInpaintWrapper:
 		def check_percentage():
 			self.start_periodic_check(os.path.normpath(self.node_dir+"/percentage.txt"))
 
-		def check_image():
-			ImageUpdater(os.path.normpath(self.node_dir+"/image.png"))
-
 		try:
 			with open(os.path.normpath(self.node_dir + "/percentage.txt"), "w") as f:
 				f.write("0")
@@ -195,12 +210,15 @@ class FooocusInpaintWrapper:
 		periodic_thread1 = threading.Thread(target=check_percentage)
 		periodic_thread1.start()
 
-		periodic_thread2 = threading.Thread(target=check_image)
-		periodic_thread2.start()
+		updater = ImageUpdater(self.node_dir+"/image.png", refresh_rate=5)
+		updater.start()
 
 		sys.path.append(self.fooocus_dir)
 		from launch import fooocusinpaintlaunch
 		new_image = fooocusinpaintlaunch(self.fooocus_dir, image, mask, performance, checkpoint, prompt, negative_prompt, guidance_scale, image_sharpness, seed, method, inpaint_additional_prompt, outpainting, lora1, lora1_weight, lora2, lora2_weight, lora3, lora3_weight, lora4, lora4_weight, lora5, lora5_weight)
+
+		updater.stop()
+
 		return (new_image)
  
  
