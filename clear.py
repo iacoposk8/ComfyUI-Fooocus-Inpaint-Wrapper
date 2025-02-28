@@ -44,4 +44,4 @@ find_replace(fooocus_dir + "\\modules\\config.py", fooocus_dir + "\\presets\\def
 
 os.system('git add .')
 os.system('git commit -m "Update"')
-os.system('git push')
+os.system('git push --set-upstream origin main')
