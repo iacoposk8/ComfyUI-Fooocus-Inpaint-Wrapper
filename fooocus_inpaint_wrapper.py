@@ -16,44 +16,51 @@ import ctypes
 import comfy
 
 class ImageUpdater:
-    def __init__(self, image_file, refresh_rate=5):
-        self.image_file = image_file
-        self.refresh_rate = refresh_rate  # Tempo in secondi tra aggiornamenti
-        self.running = False
-        self.thread = None
+	def __init__(self, image_file, refresh_rate=5):
+		self.image_file = image_file
+		self.refresh_rate = refresh_rate  # Tempo in secondi tra aggiornamenti
+		self.running = False
+		self.thread = None
 
-    def start(self):
-        """Avvia il thread dell'aggiornamento immagine."""
-        if self.running:
-            return  # Evita di avviare più thread
-        self.running = True
-        self.thread = threading.Thread(target=self.start_loop, daemon=True)
-        self.thread.start()
+	def start(self):
+		"""Avvia il thread dell'aggiornamento immagine."""
+		if self.running:
+			return  # Evita di avviare più thread
+		self.running = True
+		self.thread = threading.Thread(target=self.start_loop, daemon=True)
+		self.thread.start()
 
-    def start_loop(self):
-        """Loop di aggiornamento immagini eseguito nel thread."""
-        cv2.namedWindow("Preview Inpainting", cv2.WINDOW_NORMAL)  # Finestra ridimensionabile
-        cv2.resizeWindow("Preview Inpainting", 240, 256)  # Imposta dimensione finestra
+	def start_loop(self):
+		"""Loop di aggiornamento immagini eseguito nel thread."""
+		cv2.namedWindow("Preview Inpainting", cv2.WINDOW_NORMAL)  # Finestra ridimensionabile
+		cv2.resizeWindow("Preview Inpainting", 240, 256)  # Imposta dimensione finestra
 
-        while self.running:
-            if os.path.exists(self.image_file):
-                img = Image.open(self.image_file)
-                img = np.array(img)
-                img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+		while self.running:
+			if os.path.exists(self.image_file):
+				img = Image.open(self.image_file)
+				img = np.array(img)
+				img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
 
-                cv2.imshow("Preview Inpainting", img)
-                key = cv2.waitKey(1)
+				cv2.imshow("Preview Inpainting", img)
+				key = cv2.waitKey(1)
 
-            time.sleep(self.refresh_rate)
+			time.sleep(self.refresh_rate)
 
-        cv2.destroyAllWindows()  # Chiude la finestra alla fine del thread
+		try:
+			cv2.destroyAllWindows()  # Chiude la finestra alla fine del thread
+		except:
+			pass
 
-    def stop(self):
-        """Ferma il thread e chiude la finestra."""
-        self.running = False
-        if self.thread:
-            self.thread.join()  # Aspetta la chiusura del thread
-        cv2.destroyAllWindows()
+	def stop(self):
+		"""Ferma il thread e chiude la finestra."""
+		self.running = False
+		if self.thread:
+			self.thread.join()  # Aspetta la chiusura del thread
+
+		try:
+			cv2.destroyAllWindows()
+		except:
+			pass
 
 class FooocusInpaintWrapper:
 	def __init__(self):
