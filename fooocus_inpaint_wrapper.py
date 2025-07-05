@@ -5,62 +5,12 @@ import json
 import requests
 import threading
 import time
-import torch
-import numpy as np
-from PIL import Image
+#import torch
 from tqdm import tqdm
 from huggingface_hub import snapshot_download
-import cv2
-import ctypes
+#import ctypes
 
 import comfy
-
-class ImageUpdater:
-	def __init__(self, image_file, refresh_rate=5):
-		self.image_file = image_file
-		self.refresh_rate = refresh_rate  # Tempo in secondi tra aggiornamenti
-		self.running = False
-		self.thread = None
-
-	def start(self):
-		"""Avvia il thread dell'aggiornamento immagine."""
-		if self.running:
-			return  # Evita di avviare più thread
-		self.running = True
-		self.thread = threading.Thread(target=self.start_loop, daemon=True)
-		self.thread.start()
-
-	def start_loop(self):
-		"""Loop di aggiornamento immagini eseguito nel thread."""
-		cv2.namedWindow("Preview Inpainting", cv2.WINDOW_NORMAL)  # Finestra ridimensionabile
-		cv2.resizeWindow("Preview Inpainting", 240, 256)  # Imposta dimensione finestra
-
-		while self.running:
-			if os.path.exists(self.image_file):
-				img = Image.open(self.image_file)
-				img = np.array(img)
-				img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-
-				cv2.imshow("Preview Inpainting", img)
-				key = cv2.waitKey(1)
-
-			time.sleep(self.refresh_rate)
-
-		try:
-			cv2.destroyAllWindows()  # Chiude la finestra alla fine del thread
-		except:
-			pass
-
-	def stop(self):
-		"""Ferma il thread e chiude la finestra."""
-		self.running = False
-		if self.thread:
-			self.thread.join()  # Aspetta la chiusura del thread
-
-		try:
-			cv2.destroyAllWindows()
-		except:
-			pass
 
 class FooocusInpaintWrapper:
 	def __init__(self):
@@ -210,21 +160,19 @@ class FooocusInpaintWrapper:
 		try:
 			with open(os.path.normpath(self.node_dir + "/percentage.txt"), "w") as f:
 				f.write("0")
-			Image.new("RGB", (100, 100), (0, 0, 0)).save(os.path.normpath(self.node_dir + "/image.png"))
+			os.remove(os.path.normpath(self.node_dir + "/js/image.png"))
+			Image.new("RGB", (100, 100), (0, 0, 0)).save(os.path.normpath(self.node_dir + "/js/image.png"))
 		except:
 			pass
 		
 		periodic_thread1 = threading.Thread(target=check_percentage)
 		periodic_thread1.start()
 
-		updater = ImageUpdater(self.node_dir+"/image.png", refresh_rate=5)
-		updater.start()
-
 		sys.path.append(self.fooocus_dir)
 		from launch import fooocusinpaintlaunch
 		new_image = fooocusinpaintlaunch(self.fooocus_dir, image, mask, performance, checkpoint, prompt, negative_prompt, guidance_scale, image_sharpness, seed, method, inpaint_additional_prompt, outpainting, lora1, lora1_weight, lora2, lora2_weight, lora3, lora3_weight, lora4, lora4_weight, lora5, lora5_weight)
 
-		updater.stop()
+		os.remove(os.path.normpath(self.node_dir + "/js/image.png"))
 
 		return (new_image)
  
